@@ -11,7 +11,7 @@ public class ViralityService {
         this.redisTemplate = redisTemplate;
     }
 
-    public void IncreaseScore(String postId, Long score) {
+    public void increaseScore(String postId, Long score) {
         String redisKey = "post"+postId+"virality_score";
         redisTemplate.opsForValue().increment(redisKey, score);
     }
