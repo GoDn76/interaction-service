@@ -1,6 +1,9 @@
     package org.godn.interactionservice.service;
 
-    import org.godn.interactionservice.dto.RequestDto;
+    import org.godn.interactionservice.dto.LikeRequestDto;
+    import org.godn.interactionservice.dto.PostRequestDto;
+    import org.godn.interactionservice.entity.Post;
+    import org.godn.interactionservice.repository.PostRepository;
     import org.godn.interactionservice.repository.UserRepository;
     import org.springframework.stereotype.Service;
 
@@ -10,6 +13,7 @@
     public class PostService {
         private final ViralityService viralityService;
         private final UserRepository userRepository;
+        private final PostRepository postRepository;
 
 
         private final Long USER_LIKE_SCORE = 20L;
@@ -20,19 +24,29 @@
 
         public PostService(
                 ViralityService viralityService,
-                UserRepository userRepository
+                UserRepository userRepository,
+                PostRepository postRepository
         ) {
             this.viralityService = viralityService;
             this.userRepository = userRepository;
+            this.postRepository = postRepository;
         }
 
-        public void likePost(RequestDto request) {
-            boolean isUser = userRepository.existsById(UUID.fromString(request.getAuthorId()));
+        public UUID savePost(PostRequestDto request) {
+            Post post = new Post();
+            post.setAuthorId(UUID.fromString(request.getAuthorId()));
+            post.setContent(request.getContent());
+
+            return postRepository.save(post).getId();
+            // Not using builder for now....
+        }
+
+        public void likePost(String postId, String userId) {
+            boolean isUser = userRepository.existsById(UUID.fromString(userId));
 
             if(isUser) {
-                viralityService.increaseScore(request.getPostId(), USER_LIKE_SCORE);
+                viralityService.increaseScore(postId, USER_LIKE_SCORE);
             }
         }
-
 
     }

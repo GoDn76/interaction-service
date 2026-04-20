@@ -39,4 +39,9 @@ public class Post {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public Post(UUID authorId, String content) {
+        this.authorId = authorId;
+        this.content = content;
+    }
 }
