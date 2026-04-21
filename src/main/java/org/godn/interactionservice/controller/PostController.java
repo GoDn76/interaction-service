@@ -28,7 +28,7 @@ public class PostController {
     }
 
     @PostMapping("{postId}/comments")
-    public ResponseEntity createComment(
+    public ResponseEntity<String> createComment(
             @PathVariable String postId
     ) {
         return ResponseEntity.ok("create COMMENT Called!!");
