@@ -1,9 +1,12 @@
 package org.godn.interactionservice.service;
 
+import org.godn.interactionservice.exception.RateLimitExceededException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 
 @Service
 public class RedisInteractionService {
@@ -25,17 +28,39 @@ public class RedisInteractionService {
                 .setIfAbsent(redisKey, "locked", cooldown);
 
         if (Boolean.FALSE.equals(isAllowed)) {
-            throw new RuntimeException("Cooldown active: Bot cannot interact with this human yet.");
+            throw new RateLimitExceededException("Cooldown active: Bot cannot interact with this human yet.");
         }
     }
 
     public void limitBotInteraction(String postId, Integer limit) {
-        String botCountKey = "post:"+postId+":bot_count";
+        String key = "post:" + postId + ":bot_count";
 
-        Long newCount = redisTemplate.opsForValue().increment(botCountKey);
+        String script = """
+        local current = redis.call("GET", KEYS[1])
+        if not current then
+            current = 0
+        else
+            current = tonumber(current)
+        end
+        if current < tonumber(ARGV[1]) then
+            return redis.call("INCR", KEYS[1])
+        else
+            return -1
+        end
+    """;
 
-        if (newCount != null && newCount > limit) {
-            throw new RuntimeException("Horizontal cap reached.");
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setScriptText(script);
+        redisScript.setResultType(Long.class);
+
+        Long result = redisTemplate.execute(redisScript, List.of(key), String.valueOf(limit));
+
+        if (result == null) {
+            throw new RuntimeException("Redis execution failed: Unable to verify bot cap.");
+        }
+
+        if (result == -1L) {
+            throw new RateLimitExceededException("Too Many Requests: Horizontal cap reached.");
         }
     }
 

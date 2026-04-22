@@ -1,7 +1,9 @@
 package org.godn.interactionservice.controller;
 
-import org.godn.interactionservice.dto.LikeRequestDto;
-import org.godn.interactionservice.dto.PostRequestDto;
+import org.godn.interactionservice.dto.request.CommentRequestDto;
+import org.godn.interactionservice.dto.request.LikeRequestDto;
+import org.godn.interactionservice.dto.request.PostRequestDto;
+import org.godn.interactionservice.dto.response.CommentResponseDto;
 import org.godn.interactionservice.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,10 +30,12 @@ public class PostController {
     }
 
     @PostMapping("{postId}/comments")
-    public ResponseEntity<String> createComment(
-            @PathVariable String postId
+    public ResponseEntity<CommentResponseDto> createComment(
+            @PathVariable String postId,
+            @RequestBody CommentRequestDto request
     ) {
-        return ResponseEntity.ok("create COMMENT Called!!");
+        CommentResponseDto response = postService.addComment(postId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("{postId}/like")
