@@ -1,9 +1,9 @@
 package org.godn.interactionservice.controller;
 
-import org.godn.interactionservice.dto.request.CommentRequestDto;
-import org.godn.interactionservice.dto.request.LikeRequestDto;
-import org.godn.interactionservice.dto.request.PostRequestDto;
-import org.godn.interactionservice.dto.response.CommentResponseDto;
+import org.godn.interactionservice.dto.CommentRequestDto;
+import org.godn.interactionservice.dto.LikeRequestDto;
+import org.godn.interactionservice.dto.PostRequestDto;
+import org.godn.interactionservice.dto.CommentResponseDto;
 import org.godn.interactionservice.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -2,9 +2,9 @@
 
     import jakarta.transaction.Transactional;
     import lombok.extern.slf4j.Slf4j;
-    import org.godn.interactionservice.dto.request.CommentRequestDto;
-    import org.godn.interactionservice.dto.request.PostRequestDto;
-    import org.godn.interactionservice.dto.response.CommentResponseDto;
+    import org.godn.interactionservice.dto.CommentRequestDto;
+    import org.godn.interactionservice.dto.PostRequestDto;
+    import org.godn.interactionservice.dto.CommentResponseDto;
     import org.godn.interactionservice.entity.Comment;
     import org.godn.interactionservice.entity.Post;
     import org.godn.interactionservice.exception.UnauthorizedUserException;
@@ -21,20 +21,24 @@
     @Service
     public class PostService {
         private final RedisInteractionService redisInteractionService;
+        private final RedisNotificationService redisNotificationService;
         private final UserRepository userRepository;
         private final PostRepository postRepository;
         private final CommentRepository commentRepository;
         private final BotRepository botRepository;
 
 
+
         public PostService(
                 RedisInteractionService redisInteractionService,
+                RedisNotificationService redisNotificationService,
                 UserRepository userRepository,
                 PostRepository postRepository,
                 CommentRepository commentRepository,
                 BotRepository botRepository
         ) {
             this.redisInteractionService = redisInteractionService;
+            this.redisNotificationService = redisNotificationService;
             this.userRepository = userRepository;
             this.postRepository = postRepository;
             this.commentRepository = commentRepository;
@@ -83,16 +87,18 @@
 
             boolean isUser = userRepository.existsById(authorId);
 
+            UUID postAuthorId = null;
             if(!isUser) {
-//                if(!botRepository.existsById(authorId)) {
-//                    log.info("Unauthorized interaction attempt by ID: {}", authorId);
-//                    throw new UnauthorizedUserException("Unauthorized: Author does not exist.");
-//                }
-                UUID postAuthorId = postRepository.findAuthorIdById(postId);
+                if(!botRepository.existsById(authorId)) {
+                    log.info("Unauthorized interaction attempt by ID: {}", authorId);
+                    throw new UnauthorizedUserException("Unauthorized: Author does not exist.");
+                }
+                postAuthorId = postRepository.findAuthorIdById(postId);
                 if(postAuthorId == null) throw new RuntimeException("Post not found");
 
+                redisInteractionService.checkBotCooldown(authorId.toString(), postAuthorId.toString());
                 redisInteractionService.limitBotInteraction(postIdStr, 100);
-                redisInteractionService.botInteractionCooldown(authorId.toString(), postAuthorId.toString(), Duration.ofMinutes(10));
+                redisInteractionService.applyBotCooldown(authorId.toString(), postAuthorId.toString(), Duration.ofMinutes(10));
             }
 
             Comment comment = new Comment();
@@ -104,12 +110,18 @@
             comment.setDepthLevel(depth);
             commentRepository.save(comment);
 
-            // 5. VIRALITY SCORE
-            //        long BOT_LIKE_SCORE = 0L;
+            if(!isUser) {
+                redisNotificationService.handleBotNotification(
+                        postAuthorId.toString(),
+                        authorId.toString()
+                );
+            }
+
             long USER_COMMENT_SCORE = 50L;
             long BOT_COMMENT_SCORE = 1L;
             Long score = isUser ? USER_COMMENT_SCORE : BOT_COMMENT_SCORE;
             redisInteractionService.increaseScore(postIdStr, score);
+
 
             CommentResponseDto response = new CommentResponseDto();
             response.setId(comment.getId());

@@ -1,4 +1,4 @@
-package org.godn.interactionservice.dto.response;
+package org.godn.interactionservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

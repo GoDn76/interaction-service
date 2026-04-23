@@ -21,7 +21,14 @@ public class RedisInteractionService {
         redisTemplate.opsForValue().increment(redisKey, score);
     }
 
-    public void botInteractionCooldown(String botId, String userId, Duration cooldown) {
+    public void checkBotCooldown(String botId, String userId) {
+        String redisKey = "cooldown:bot_"+botId+":human_"+userId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
+            throw new RateLimitExceededException("Cooldown active: Bot cannot interact with this human yet.");
+        }
+    }
+
+    public void applyBotCooldown(String botId, String userId, Duration cooldown) {
         String redisKey = "cooldown:bot_"+botId+":human_"+userId;
 
         Boolean isAllowed = redisTemplate.opsForValue()

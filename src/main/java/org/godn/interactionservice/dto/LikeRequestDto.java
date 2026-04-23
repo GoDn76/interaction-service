@@ -1,4 +1,4 @@
-package org.godn.interactionservice.dto.request;
+package org.godn.interactionservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostRequestDto {
-    private String authorId;
-    private String content;
+public class LikeRequestDto {
+    private String userId;
 }
