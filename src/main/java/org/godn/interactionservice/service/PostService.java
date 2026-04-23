@@ -113,7 +113,8 @@
             if(!isUser) {
                 redisNotificationService.handleBotNotification(
                         postAuthorId.toString(),
-                        authorId.toString()
+                        authorId.toString(),
+                        Duration.ofMinutes(15)
                 );
             }
 

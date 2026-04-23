@@ -16,7 +16,7 @@ public class RedisNotificationService {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-    public void handleBotNotification(String postAuthorId, String botId) {
+    public void handleBotNotification(String postAuthorId, String botId, Duration cooldown) {
         String cooldownKey = "user:" + postAuthorId + ":notif_cooldown";
         String pendingQueueKey = "user:" + postAuthorId + ":pending_notifs";
         String message = "Bot " + botId + " replied to your post";
@@ -25,7 +25,7 @@ public class RedisNotificationService {
             stringRedisTemplate.opsForList().leftPush(pendingQueueKey, message);
         } else {
             log.info("Push Notification Sent to User: {}", message);
-            stringRedisTemplate.opsForValue().set(cooldownKey, "locked", Duration.ofMinutes(15));
+            stringRedisTemplate.opsForValue().set(cooldownKey, "locked", cooldown);
         }
     }
 }
