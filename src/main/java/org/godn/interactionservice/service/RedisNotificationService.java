@@ -15,37 +15,48 @@ public class RedisNotificationService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    private static final String ACTIVE_USERS_SET = "active:pending_notif_users";
+
+
     public RedisNotificationService(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
     public void handleBotNotification(String postAuthorId, String botId, Duration cooldown) {
+
         String cooldownKey = "user:" + postAuthorId + ":notif_cooldown";
         String pendingQueueKey = "user:" + postAuthorId + ":pending_notifs";
         String message = "Bot " + botId + " replied to your post";
 
-        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(cooldownKey))) {
-            stringRedisTemplate.opsForList().leftPush(pendingQueueKey, message);
-        } else {
+        Boolean lockAcquired = stringRedisTemplate.opsForValue()
+                .setIfAbsent(cooldownKey, "locked", cooldown);
+
+        if (Boolean.TRUE.equals(lockAcquired)) {
             log.info("Push Notification Sent to User: {}", message);
-            stringRedisTemplate.opsForValue().set(cooldownKey, "locked", cooldown);
+        } else {
+            stringRedisTemplate.opsForList().leftPush(pendingQueueKey, message);
+            stringRedisTemplate.opsForSet().add(ACTIVE_USERS_SET, postAuthorId);
         }
     }
 
-    @Scheduled(fixedRate = 300000) // For 5 minutes...
+    @Scheduled(fixedRate = 300000) // 5 minutes
     public void sweepPendingNotifications() {
-        Set<String> queueKeys = stringRedisTemplate.keys("user:*:pending_notifs");
 
-        if(queueKeys == null || queueKeys.isEmpty()) {
+        Set<String> users = stringRedisTemplate.opsForSet().members(ACTIVE_USERS_SET);
+
+        if (users == null || users.isEmpty()) {
             return;
         }
 
-        log.info("CRON Sweeper started. Checking pending notifications for {} users.", queueKeys.size());
+        log.info("CRON Sweeper started. Checking pending notifications for {} users.", users.size());
 
-        for (String queueKey : queueKeys) {
-            List<String> messages = stringRedisTemplate.opsForList().range(queueKey, 0, -1); // Getting all the messages...
+        for (String userId : users) {
+
+            String queueKey = "user:" + userId + ":pending_notifs";
+            List<String> messages = stringRedisTemplate.opsForList().range(queueKey, 0, -1);
 
             if (messages != null && !messages.isEmpty()) {
+
                 int totalPending = messages.size();
                 String firstMessage = messages.get(0);
 
@@ -53,16 +64,18 @@ public class RedisNotificationService {
                 int othersCount = totalPending - 1;
 
                 if (othersCount > 0) {
-                    log.info("Summarized Push Notification: Bot {} and {} others interacted with your posts.", firstBotId, othersCount);
+                    log.info("Summarized Push Notification: Bot {} and {} others interacted with your posts.",
+                            firstBotId, othersCount);
                 } else {
                     log.info("Summarized Push Notification: {}", firstMessage);
                 }
 
-                // Remove from Redis...
                 stringRedisTemplate.delete(queueKey);
             }
-        }
-        log.info("Sweeping complete.");
 
+            stringRedisTemplate.opsForSet().remove(ACTIVE_USERS_SET, userId);
+        }
+
+        log.info("Sweeping complete.");
     }
 }

@@ -1,9 +1,6 @@
 package org.godn.interactionservice.controller;
 
-import org.godn.interactionservice.dto.CommentRequestDto;
-import org.godn.interactionservice.dto.LikeRequestDto;
-import org.godn.interactionservice.dto.PostRequestDto;
-import org.godn.interactionservice.dto.CommentResponseDto;
+import org.godn.interactionservice.dto.*;
 import org.godn.interactionservice.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +19,11 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<UUID> createPost(
+    public ResponseEntity<Response> createPost(
             @RequestBody PostRequestDto request
     ) {
         UUID savedPost = postService.savePost(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new Response(true, savedPost.toString()));
     }
 
     @PostMapping("{postId}/comments")
@@ -39,11 +36,10 @@ public class PostController {
     }
 
     @PostMapping("{postId}/like")
-    public ResponseEntity<String> createLike(
+    public ResponseEntity<Response> createLike(
             @PathVariable String postId,
             @RequestBody LikeRequestDto request
     ) {
         postService.likePost(postId, request.getUserId());
-        return ResponseEntity.ok("Post liked successfully");
-    }
+        return ResponseEntity.status(HttpStatus.CREATED).body(new Response(true, "Liked Post Successfully!!!"));    }
 }

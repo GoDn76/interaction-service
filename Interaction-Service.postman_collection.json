@@ -1,0 +1,135 @@
+{
+  "info": {
+    "_postman_id": "393b40d7-dcf7-4c07-86dd-61a827b63571",
+    "name": "Interaction-Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "44889955"
+  },
+  "item": [
+    {
+      "name": "Save Post",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"authorId\": \"11111111-1111-1111-1111-111111111111\",\r\n    \"content\": \"It is a message to the DB I won't tolerate a Redis Interception\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/posts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "posts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Comment",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"authorId\": \"22222222-2222-2222-2222-222222222222\",\r\n    \"content\": \"I am very Cold Test Bot I want to freeze this DB\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/posts/55802801-ee99-4a89-a3a7-0780c85b985a/comments",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "posts",
+            "55802801-ee99-4a89-a3a7-0780c85b985a",
+            "comments"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Like",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"userId\": \"11111111-1111-1111-1111-111111111111\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/posts/55802801-ee99-4a89-a3a7-0780c85b985a/like",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "posts",
+            "55802801-ee99-4a89-a3a7-0780c85b985a",
+            "like"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Comment Reply",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"authorId\": \"11111111-1111-1111-1111-111111111111\",\r\n    \"content\": \"I have set up something that you can't cross!!!\",\r\n    \"parentCommentId\": \"0a3d72b1-b75a-4f91-be8d-66e105d414f1\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/posts/55802801-ee99-4a89-a3a7-0780c85b985a/comments",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "posts",
+            "55802801-ee99-4a89-a3a7-0780c85b985a",
+            "comments"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
